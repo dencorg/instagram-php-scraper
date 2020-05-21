@@ -166,6 +166,16 @@ class Media extends AbstractModel
     protected $locationSlug;
 
     /**
+     * @var string
+     */
+    protected $altText;
+
+    /**
+     * @var string
+     */
+    protected $locationAddressJson;
+
+    /**
      * @param string $code
      *
      * @return int
@@ -206,7 +216,7 @@ class Media extends AbstractModel
         while ($id > 0) {
             $remainder = $id % 64;
             $id = ($id - $remainder) / 64;
-            $code = $alphabet{$remainder} . $code;
+            $code = $alphabet[$remainder] . $code;
         };
         return $code;
     }
@@ -444,6 +454,27 @@ class Media extends AbstractModel
     {
         return $this->locationSlug;
     }
+    /**
+     * @return string
+     */
+    public function getAltText()
+    {
+        return $this->altText;
+    }
+    /**
+     * @return string
+     */
+    public function getLocationAddressJson()
+    {
+        return $this->locationAddressJson;
+    }
+    /**
+     * @return mixed
+     */
+    public function getLocationAddress()
+    {
+        return json_decode($this->locationAddressJson);
+    }
 
     /**
      * @param $value
@@ -519,6 +550,9 @@ class Media extends AbstractModel
             case 'caption':
                 $this->caption = $arr[$prop];
                 break;
+            case 'accessibility_caption':
+                $this->altText = $value;
+                break;
             case 'video_views':
                 $this->videoViews = $value;
                 $this->type = static::TYPE_VIDEO;
@@ -539,9 +573,12 @@ class Media extends AbstractModel
                 }
                 break;
             case 'location':
-                $this->locationId = $arr[$prop]['id'];
-                $this->locationName = $arr[$prop]['name'];
-                $this->locationSlug = $arr[$prop]['slug'];
+                if(isset($arr[$prop])) {
+                    $this->locationId = $arr[$prop]['id'] ? $arr[$prop]['id'] : null;
+                    $this->locationName = $arr[$prop]['name'] ? $arr[$prop]['name'] : null;
+                    $this->locationSlug = $arr[$prop]['slug'] ? $arr[$prop]['slug'] : null;
+                    $this->locationAddressJson = isset($arr[$prop]['address_json']) ? $arr[$prop]['address_json'] : null;
+                }
                 break;
             case 'user':
                 $this->owner = Account::create($arr[$prop]);
